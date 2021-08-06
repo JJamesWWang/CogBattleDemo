@@ -53,6 +53,13 @@ class CogBattleFSM(FSM):
 
     def enterGagExecute(self):
         cogs = self.battle.cogs
+        self.executeGags(cogs)
+        if cogs:
+            self.demand(CogBattleState.COGS_ATTACK)
+        else:
+            self.demand(CogBattleState.TOONS_WON)
+
+    def executeGags(self, cogs):
         for gag in sorted(self.battle.selectedGags):
             targetCog = 0
             if not Gag.isGagHit(gag):
@@ -60,14 +67,16 @@ class CogBattleFSM(FSM):
             cogs[targetCog].takeDamage(Gag.DAMAGE[gag])
             if cogs[targetCog].isDead():
                 cogs.pop(targetCog)
-        
-        if cogs:
-            self.demand(CogBattleState.COGS_ATTACK)
-        else:
-            self.demand(CogBattleState.TOONS_WON)
 
     def enterCogsAttack(self):
         toons = self.battle.toons
+        self.executeCogAttacks(toons)
+        if toons:
+            self.demand(CogBattleState.GAG_SELECT)
+        else:
+            self.demand(CogBattleState.COGS_WON)
+
+    def executeCogAttacks(self, toons):
         for cog in self.battle.cogs:
             attack = random.choice(Cog.ATTACKS)
             targetToon = 0
@@ -76,11 +85,6 @@ class CogBattleFSM(FSM):
             toons[targetToon].takeDamage(Cog.DAMAGE[attack])
             if toons[targetToon].isDead():
                 toons.pop(targetToon)
-
-        if toons:
-            self.demand(CogBattleState.GAG_SELECT)
-        else:
-            self.demand(CogBattleState.COGS_WON)
 
     def enterCogsWon(self):
         print("Cogs won the battle!")
