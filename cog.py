@@ -22,3 +22,9 @@ class Cog:
 
     def isDead(self):
         return self.health <= 0
+
+    @staticmethod
+    def isCogHit(cogAttack):
+        isHit = random.random() < Cog.CHANCE_TO_HIT[cogAttack]
+        print(f"The cog {'hit' if isHit else 'missed'}")
+        return isHit
