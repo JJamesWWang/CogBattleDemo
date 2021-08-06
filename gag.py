@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class Gag(Enum):
+class Gag:
     NONE, PASS, SQUIRT, THROW = range(4)
     DAMAGE = {
         PASS: 0,
