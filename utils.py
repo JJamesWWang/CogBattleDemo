@@ -1,6 +1,3 @@
-from cogbattle import CogBattle
-
-
 class TimePrinter:
     def __init__(self):
         self.secondsDisplayed = set()
