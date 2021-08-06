@@ -3,13 +3,14 @@ from direct.gui.OnscreenText import OnscreenText
 from cogbattle import CogBattle
 from gag import Gag
 from cog import Cog
+from toon import Toon
 from panda3d.core import TextNode
 import sys
 
 
 # Macro-like function used to reduce the amount to code needed to create the on
 # screen instructions
-def genText(text, i):
+def genText(text, i) -> OnscreenText:
     return OnscreenText(
         text=text,
         parent=base.a2dTopLeft,
@@ -22,10 +23,9 @@ def genText(text, i):
 
 
 class CogBattleDemo(ShowBase):
-
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.cogBattle = CogBattle(Cog())
+        self.cogBattle: CogBattle = CogBattle(Toon(), Cog())
         self.generateInstructions()
         self.bindInput()
 
