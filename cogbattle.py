@@ -29,25 +29,58 @@ class CogBattleFSM(FSM):
             CogBattleState.COGS_WON: []
         }
         self.battle = battle
+        self.gagSelectTimer = None
+        self.timePrinter = TimePrinter()
 
     def enterGagSelect(self):
+        print()
         print("Entered Gag Select")
         self.printStatus()
+        self.gagSelectTimer = taskMgr.add(self.gagSelectTimerTick, 
+                                          "GagSelectTimerTick")
+        self.timePrinter.clear()
+
+    def gagSelectTimerTick(self, task):
+        if task.time > CogBattle.GAG_SELECT_WAIT_TIME:
+            self.request(CogBattleState.GAG_EXECUTE)
+            return Task.done
+        self.timePrinter.printTime(
+            int(CogBattle.GAG_SELECT_WAIT_TIME - task.time))
+        return Task.cont
 
     def exitGagSelect(self):
-        print("Exited Gag Select")
+        taskMgr.remove(self.gagSelectTimer)
 
     def enterGagExecute(self):
-        print("Entered Gag Execute")
-
-    def exitGagExecute(self):
-        print("Exited Gag Execute")
+        cogs = self.battle.cogs
+        for gag in sorted(self.battle.selectedGags):
+            targetCog = 0
+            if not Gag.isGagHit(gag):
+                continue
+            cogs[targetCog].takeDamage(Gag.DAMAGE[gag])
+            if cogs[targetCog].isDead():
+                cogs.pop(targetCog)
+        
+        if cogs:
+            self.demand(CogBattleState.COGS_ATTACK)
+        else:
+            self.demand(CogBattleState.TOONS_WON)
 
     def enterCogsAttack(self):
-        print("Entered Cogs Attack")
+        toons = self.battle.toons
+        for cog in self.battle.cogs:
+            attack = random.choice(Cog.ATTACKS)
+            targetToon = 0
+            if not Cog.isCogHit(attack):
+                continue
+            toons[targetToon].takeDamage(Cog.DAMAGE[attack])
+            if toons[targetToon].isDead():
+                toons.pop(targetToon)
 
-    def exitCogsAttack(self):
-        print("Exited Cogs Attack")
+        if toons:
+            self.demand(CogBattleState.GAG_SELECT)
+        else:
+            self.demand(CogBattleState.COGS_WON)
 
     def enterCogsWon(self):
         print("Cogs won the battle!")
@@ -75,26 +108,10 @@ class CogBattle:
         self.toons = [Toon()]
         self.cogs = [cog]
         self.selectedGags = [Gag.PASS] * len(self.toons)
-        self.gagSelectTimer = None
-        self.timePrinter = TimePrinter()
 
     def startCogBattle(self):
         print("Starting Cog Battle")
-        self.startGagSelect()
-
-    def startGagSelect(self):
-        if not self.cogBattleFSM.request(CogBattleState.GAG_SELECT):
-            return
-        self.gagSelectTimer = taskMgr.add(self.gagSelectTimerTick, 
-                                          "GagSelectTimerTick")
-        self.timePrinter.clear()
-
-    def gagSelectTimerTick(self, task):
-        if task.time > self.GAG_SELECT_WAIT_TIME:
-            self.handleGagSelectEnded()
-            return Task.done
-        self.timePrinter.printTime(int(self.GAG_SELECT_WAIT_TIME - task.time))
-        return Task.cont
+        self.cogBattleFSM.request(CogBattleState.GAG_SELECT)
 
     def selectGag(self, gag):
         if self.cogBattleFSM.state != CogBattleState.GAG_SELECT:
@@ -102,60 +119,10 @@ class CogBattle:
         print(f"Selected {gag}")
         self.selectedGags[0] = gag
         if all(self.selectedGags):
-            self.executeGags()
+            self.startGagExecute()
 
-    def handleGagSelectEnded(self):
-        self.executeGags()
+    def startGagExecute(self):
+        self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE)
 
-    def executeGags(self):
-        if not self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE):
-            return
-        taskMgr.remove(self.gagSelectTimer)
-
-        self.selectedGags.sort()
-        for gag in self.selectedGags:
-            targetCog = 0
-            if not self.isGagHit(gag):
-                continue
-            self.cogs[targetCog].takeDamage(Gag.DAMAGE[gag])
-            if self.cogs[targetCog].isDead():
-                self.cogs.pop(targetCog)
-
-        if self.cogs:
-            self.cogsAttack()
-        else:
-            self.endBattle(True)
-
-    def isGagHit(self, gag) -> bool:
-        rand = random.random()
-        isHit = rand < 0.95 and rand < Gag.CHANCE_TO_HIT[gag]
-        print(f"The toon {'hit' if isHit else 'missed'}")
-        return isHit
-
-    def cogsAttack(self):
-        if not self.cogBattleFSM.request(CogBattleState.COGS_ATTACK):
-            return
-        for cog in self.cogs:
-            attack = random.choice(Cog.ATTACKS)
-            targetToon = 0
-            if not self.isCogHit(attack):
-                continue
-            self.toons[targetToon].takeDamage(Cog.DAMAGE[attack])
-            if self.toons[targetToon].isDead():
-                self.toons.pop(targetToon)
-
-        if self.toons:
-            self.startGagSelect()
-        else:
-            self.endBattle(False)
-
-    def isCogHit(self, cogAttack):
-        isHit = random.random() < Cog.CHANCE_TO_HIT[cogAttack]
-        print(f"The cog {'hit' if isHit else 'missed'}")
-        return isHit
-
-    def endBattle(self, isToonWin: bool):
-        if isToonWin:
-            self.cogBattleFSM.request(CogBattleState.TOONS_WON)
-        else:
-            self.cogBattleFSM.request(CogBattleState.COGS_WON)
+    def startCogsAttack(self):
+        self.cogBattleFSM.request(CogBattleState.COGS_ATTACK)
