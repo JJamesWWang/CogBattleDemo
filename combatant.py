@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import List
+from overrides import EnforceOverrides
 
 
-class Combatant(ABC):
+class Combatant(ABC, EnforceOverrides):
     """The combatant is the base class for any character that will partake in
     battles.
 
@@ -12,7 +14,15 @@ class Combatant(ABC):
     def __init__(self):
         self.health: int
 
-    def takeDamage(self, damage: int):
+    @abstractmethod
+    def executeAttack(self, targets: List["Combatant"]) -> None:
+        """Tell this combatant to attack the provided targets.
+
+        Args:
+            targets (List[Combatant]): A list of combatants to attack.
+        """
+
+    def takeDamage(self, damage: int) -> None:
         """Tell this combatant to receive damage.
 
         The damage might not be equal to the passed in argument due to

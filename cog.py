@@ -1,6 +1,7 @@
 from combatant import Combatant
 import random
 from typing import List, Dict
+from overrides import overrides
 
 
 class Cog(Combatant):
@@ -20,6 +21,10 @@ class Cog(Combatant):
     def __init__(self, deterministic: bool = False) -> None:
         self.health: int = 12
         self.isDeterministic: bool = deterministic
+
+    @overrides
+    def executeAttack(self, targets: List[Combatant]):
+        pass
 
     def isCogHit(self, cogAttack: str) -> bool:
         isHit = (
