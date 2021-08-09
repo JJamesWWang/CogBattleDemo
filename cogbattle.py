@@ -1,12 +1,13 @@
+from battle import Battle
+from cog import Cog, CogCombatant
 from direct.fsm.FSM import FSM
 from direct.task import Task
 from direct.task.TaskManagerGlobal import taskMgr
 from gag import Gag
-from cog import Cog
-from toon import Toon
+from toon import Toon, ToonCombatant
+from typing import Dict, List
 from utils import TimePrinter
 import random
-from typing import Dict, List
 
 
 class CogBattleState:
@@ -41,14 +42,18 @@ class CogBattleFSM(FSM):
         print()
         print("Entered Gag Select")
         self.printStatus()
-        self.gagSelectTimer = taskMgr.add(self.gagSelectTimerTick, "GagSelectTimerTick")
+        self.gagSelectTimer = taskMgr.add(
+            self.gagSelectTimerTick, "GagSelectTimerTick"
+        )
         self.timePrinter.clear()
 
     def gagSelectTimerTick(self, task: Task) -> int:
         if task.time > CogBattle.GAG_SELECT_WAIT_TIME:
             self.request(CogBattleState.GAG_EXECUTE)
             return Task.done
-        self.timePrinter.printTime(int(CogBattle.GAG_SELECT_WAIT_TIME - task.time))
+        self.timePrinter.printTime(
+            int(CogBattle.GAG_SELECT_WAIT_TIME - task.time)
+        )
         return Task.cont
 
     def exitGagSelect(self) -> None:
@@ -81,11 +86,11 @@ class CogBattleFSM(FSM):
     def executeCogAttacks(self) -> None:
         toons = self.battle.toons
         for cog in self.battle.cogs:
-            attack = random.choice(Cog.ATTACKS)
+            attack = random.choice(CogCombatant.ATTACKS)
             targetToon = 0
             if not cog.isCogHit(attack):
                 continue
-            toons[targetToon].takeDamage(Cog.DAMAGE[attack])
+            toons[targetToon].takeDamage(CogCombatant.DAMAGE[attack])
             if toons[targetToon].isDead():
                 toons.pop(targetToon)
 
@@ -105,15 +110,21 @@ class CogBattleFSM(FSM):
         print()
 
 
-class CogBattle:
+class CogBattle(Battle):
     GAG_SELECT_WAIT_TIME: int = 10
     MAX_TOONS_IN_BATTLE: int = 1
     MAX_COGS_IN_BATTLE: int = 1
 
-    def __init__(self, toon: Toon, cog: Cog) -> None:
+    def __init__(self, toons: List[Toon], cogs: List[Cog]) -> None:
+        self.toons: List[ToonCombatant] = [
+            ToonCombatant(self, toon) for toon in toons
+        ]
+        self.cogs: List[CogCombatant] = [
+            CogCombatant(self, cog) for cog in cogs
+        ]
+        super().__init__([self.toons, self.cogs])
+
         self.cogBattleFSM: CogBattleFSM = CogBattleFSM("CogBattleFSM", self)
-        self.toons: List[Toon] = [toon]
-        self.cogs: List[Cog] = [cog]
         self.selectedGags: List[int] = [Gag.PASS] * len(self.toons)
 
     def startCogBattle(self) -> None:
