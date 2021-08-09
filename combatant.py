@@ -11,16 +11,22 @@ class Combatant(ABC, EnforceOverrides):
         health (int): How much health the combatant currently has.
     """
 
-    def __init__(self):
+    def __init__(self, battle: "Battle", deterministic: bool = False):
         self.health: int
+        self.battle: "Battle" = battle
+        self.isDeterministic: bool = deterministic
 
     @abstractmethod
-    def executeAttack(self, targets: List["Combatant"]) -> None:
+    def executeAttack(self) -> None:
         """Tell this combatant to attack the provided targets.
 
         Args:
             targets (List[Combatant]): A list of combatants to attack.
         """
+
+    @abstractmethod
+    def isAttackHit(self) -> bool:
+        """Returns whether the combatant's next attack will hit."""
 
     def takeDamage(self, damage: int) -> None:
         """Tell this combatant to receive damage.
