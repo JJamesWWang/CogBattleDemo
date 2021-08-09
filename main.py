@@ -25,7 +25,7 @@ def genText(text, i) -> OnscreenText:
 class CogBattleDemo(ShowBase):
     def __init__(self) -> None:
         super().__init__()
-        self.cogBattle: CogBattle = CogBattle(Toon(), Cog())
+        self.cogBattle: CogBattle = CogBattle([Toon()], [Cog()])
         self.generateInstructions()
         self.bindInput()
 
@@ -42,7 +42,6 @@ class CogBattleDemo(ShowBase):
         self.accept("1", self.cogBattle.selectGag, [Gag.PASS])
         self.accept("2", self.cogBattle.selectGag, [Gag.SQUIRT])
         self.accept("3", self.cogBattle.selectGag, [Gag.THROW])
-
 
 
 if __name__ == "__main__":
