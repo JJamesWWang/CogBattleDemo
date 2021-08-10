@@ -1,4 +1,3 @@
-from battle import Battle
 from cog import Cog, CogCombatant
 from direct.fsm.FSM import FSM
 from direct.task import Task
@@ -81,14 +80,14 @@ class CogBattleFSM(FSM):
         taskMgr.remove(self.gagSelectTimer)
 
     def enterGagExecute(self) -> None:
-        self.battle.advanceTurn()
+        self.battle.executeGags()
         if self.battle.cogs:
             self.demand(CogBattleState.COGS_ATTACK)
         else:
             self.demand(CogBattleState.TOONS_WON)
 
     def enterCogsAttack(self) -> None:
-        self.battle.advanceTurn()
+        self.battle.attackToons()
         if self.battle.toons:
             self.demand(CogBattleState.GAG_SELECT)
         else:
@@ -110,7 +109,7 @@ class CogBattleFSM(FSM):
         print()
 
 
-class CogBattle(Battle):
+class CogBattle:
     GAG_SELECT_WAIT_TIME: int = 10
     MAX_TOONS_IN_BATTLE: int = 4
     MAX_COGS_IN_BATTLE: int = 4
@@ -118,22 +117,15 @@ class CogBattle(Battle):
     def __init__(
         self, toons: List[Toon], cogs: List[Cog], deterministic: bool = False
     ) -> None:
-        toons = [ToonCombatant(self, toon, deterministic) for toon in toons]
-        cogs = [CogCombatant(self, cog, deterministic) for cog in cogs]
-        super().__init__([toons, cogs])
+        self.toons = [
+            ToonCombatant(self, toon, deterministic) for toon in toons
+        ]
+        self.cogs = [CogCombatant(self, cog, deterministic) for cog in cogs]
         self.isDeterministic = deterministic
         self.cogBattleFSM: CogBattleFSM = CogBattleFSM("CogBattleFSM", self)
         self.pendingToons: List[Toon] = []
         self.pendingCogs: List[Cog] = []
-        self.selectedGagTurn = 0
-
-    @property
-    def toons(self):
-        return self.sides[0]
-
-    @property
-    def cogs(self):
-        return self.sides[1]
+        self.selectedGagTurn: int = 0
 
     def startCogBattle(self) -> None:
         print("Starting Cog Battle")
@@ -147,6 +139,17 @@ class CogBattle(Battle):
         self.selectedGagTurn = (self.selectedGagTurn + 1) % len(self.toons)
         if all(toon.selectedGag for toon in self.toons):
             self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE)
+
+    def executeGags(self) -> None:
+        for gag in Gag.EXECUTE_ORDER:
+            for toon in filter(lambda t: t.selectedGag == gag, self.toons):
+                toon.executeAttack()
+            self.cogs = [cog for cog in self.cogs if not cog.isDead()]
+
+    def attackToons(self) -> None:
+        for cog in self.cogs:
+            cog.executeAttack()
+        self.toons = [toon for toon in self.toons if not toon.isDead()]
 
     def requestToonJoin(self, toon: Toon) -> None:
         if len(self.toons) + len(self.pendingToons) < self.MAX_TOONS_IN_BATTLE:

@@ -1,5 +1,4 @@
-from typing import Dict
-import random
+from typing import List, Dict
 
 
 class Gag:
@@ -9,3 +8,4 @@ class Gag:
     THROW: int = 3
     DAMAGE: Dict[int, int] = {PASS: 0, SQUIRT: 4, THROW: 6}
     CHANCE_TO_HIT: Dict[int, float] = {PASS: 0.0, SQUIRT: 0.9, THROW: 0.75}
+    EXECUTE_ORDER: List[int] = [SQUIRT, THROW]
