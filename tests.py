@@ -23,6 +23,38 @@ class TestCogBattle(unittest.TestCase):
         self.setUp1v1()
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.GAG_SELECT)
 
+    def test_correct_toon_number(self):
+        self.setUp1v1()
+        self.assertEqual(len(self.cogBattle.toons), 1)
+        self.cogBattle.requestToonJoin(Toon())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.toons), 2)
+        self.cogBattle.requestToonJoin(Toon())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.toons), 3)
+        self.cogBattle.requestToonJoin(Toon())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.toons), 4)
+        self.cogBattle.requestToonJoin(Toon())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.toons), 4)
+
+    def test_correct_cog_number(self):
+        self.setUp1v1()
+        self.assertEqual(len(self.cogBattle.cogs), 1)
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.cogs), 2)
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.cogs), 3)
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.cogs), 4)
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        self.assertEqual(len(self.cogBattle.cogs), 4)
+
     def test_toon_dies(self):
         self.setUp1v1()
         for _ in range(8):

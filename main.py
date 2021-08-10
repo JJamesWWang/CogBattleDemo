@@ -32,13 +32,17 @@ class CogBattleDemo(ShowBase):
     def generateInstructions(self):
         genText("ESC: Quit", 0)
         genText("S: Start Cog Battle", 1)
-        genText("1: Pass", 2)
-        genText("2: Use Squirt", 3)
-        genText("3: Use Throw", 4)
+        genText("T: Add Toon", 2)
+        genText("C: Add Cog", 3)
+        genText("1: Pass", 4)
+        genText("2: Use Squirt", 5)
+        genText("3: Use Throw", 6)
 
     def bindInput(self):
         self.accept("escape", sys.exit)
         self.accept("s", self.cogBattle.startCogBattle)
+        self.accept("t", self.cogBattle.requestToonJoin, [Toon()])
+        self.accept("c", self.cogBattle.requestCogJoin, [Cog()])
         self.accept("1", self.cogBattle.selectGag, [Gag.PASS])
         self.accept("2", self.cogBattle.selectGag, [Gag.SQUIRT])
         self.accept("3", self.cogBattle.selectGag, [Gag.THROW])

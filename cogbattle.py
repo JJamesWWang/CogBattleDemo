@@ -46,8 +46,16 @@ class CogBattleFSM(FSM):
             self.gagSelectTimerTick, "GagSelectTimerTick"
         )
         self.timePrinter.clear()
+        self.battle.selectedGagTurn = 0
 
     def gagSelectTimerTick(self, task: Task) -> int:
+        if (
+            len(self.battle.pendingToons) > 0
+            or len(self.battle.pendingCogs) > 0
+        ):
+            self.addPendingCombatants()
+            return self.resetGagSelectTimer()
+
         if task.time > CogBattle.GAG_SELECT_WAIT_TIME:
             self.request(CogBattleState.GAG_EXECUTE)
             return Task.done
@@ -55,6 +63,19 @@ class CogBattleFSM(FSM):
             int(CogBattle.GAG_SELECT_WAIT_TIME - task.time)
         )
         return Task.cont
+
+    def addPendingCombatants(self) -> None:
+        self.battle.toons.extend(self.battle.pendingToons)
+        self.battle.pendingToons = []
+        self.battle.cogs.extend(self.battle.pendingCogs)
+        self.battle.pendingCogs = []
+        self.printStatus()
+
+    def resetGagSelectTimer(self) -> None:
+        taskMgr.remove(self.gagSelectTimer)
+        self.gagSelectTimer = taskMgr.add(
+            self.gagSelectTimerTick, "GagSelectTimerTick"
+        )
 
     def exitGagSelect(self) -> None:
         taskMgr.remove(self.gagSelectTimer)
@@ -91,8 +112,8 @@ class CogBattleFSM(FSM):
 
 class CogBattle(Battle):
     GAG_SELECT_WAIT_TIME: int = 10
-    MAX_TOONS_IN_BATTLE: int = 1
-    MAX_COGS_IN_BATTLE: int = 1
+    MAX_TOONS_IN_BATTLE: int = 4
+    MAX_COGS_IN_BATTLE: int = 4
 
     def __init__(
         self, toons: List[Toon], cogs: List[Cog], deterministic: bool = False
@@ -100,7 +121,11 @@ class CogBattle(Battle):
         toons = [ToonCombatant(self, toon, deterministic) for toon in toons]
         cogs = [CogCombatant(self, cog, deterministic) for cog in cogs]
         super().__init__([toons, cogs])
+        self.isDeterministic = deterministic
         self.cogBattleFSM: CogBattleFSM = CogBattleFSM("CogBattleFSM", self)
+        self.pendingToons: List[Toon] = []
+        self.pendingCogs: List[Cog] = []
+        self.selectedGagTurn = 0
 
     @property
     def toons(self):
@@ -117,10 +142,22 @@ class CogBattle(Battle):
     def selectGag(self, gag: int) -> None:
         if self.cogBattleFSM.state != CogBattleState.GAG_SELECT:
             return
-        print(f"Selected {gag}")
-        self.toons[0].selectedGag = gag
+        print(f"Selected {gag} for toon {self.selectedGagTurn + 1}")
+        self.toons[self.selectedGagTurn].selectedGag = gag
+        self.selectedGagTurn = (self.selectedGagTurn + 1) % len(self.toons)
         if all(toon.selectedGag for toon in self.toons):
             self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE)
 
-    def clearDeadCombatants(self) -> None:
-        super().clearDeadCombatants()
+    def requestToonJoin(self, toon: Toon) -> None:
+        if len(self.toons) + len(self.pendingToons) < self.MAX_TOONS_IN_BATTLE:
+            print("Adding Toon")
+            self.pendingToons.append(
+                ToonCombatant(self, toon, self.isDeterministic)
+            )
+
+    def requestCogJoin(self, cog: Cog) -> None:
+        if len(self.cogs) + len(self.pendingCogs) < self.MAX_COGS_IN_BATTLE:
+            print("Adding Cog")
+            self.pendingCogs.append(
+                CogCombatant(self, cog, self.isDeterministic)
+            )
