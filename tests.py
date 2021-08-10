@@ -14,17 +14,15 @@ class TestCogBattle(unittest.TestCase):
         loadPrcFileData("", "window-type offscreen")
         cls.demo = CogBattleDemo()
 
-    def setUp1v1(self):
+    def setUp(self):
         self.cogBattle = CogBattle([Toon()], [Cog()], deterministic=True)
         self.cogBattleFSM = self.cogBattle.cogBattleFSM
         self.cogBattle.startCogBattle()
 
     def test_start_cog_battle_state(self):
-        self.setUp1v1()
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.GAG_SELECT)
 
     def test_correct_toon_number(self):
-        self.setUp1v1()
         self.assertEqual(len(self.cogBattle.toons), 1)
         self.cogBattle.requestToonJoin(Toon())
         taskMgr.step()
@@ -40,7 +38,6 @@ class TestCogBattle(unittest.TestCase):
         self.assertEqual(len(self.cogBattle.toons), 4)
 
     def test_correct_cog_number(self):
-        self.setUp1v1()
         self.assertEqual(len(self.cogBattle.cogs), 1)
         self.cogBattle.requestCogJoin(Cog())
         taskMgr.step()
@@ -56,28 +53,69 @@ class TestCogBattle(unittest.TestCase):
         self.assertEqual(len(self.cogBattle.cogs), 4)
 
     def test_toon_dies(self):
-        self.setUp1v1()
         for _ in range(8):
             self.cogBattle.selectGag(Gag.PASS)
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.COGS_WON)
 
     def test_cog_dies_squirt(self):
-        self.setUp1v1()
         for _ in range(3):
             self.cogBattle.selectGag(Gag.SQUIRT)
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
 
     def test_cog_dies_throw(self):
-        self.setUp1v1()
         for _ in range(2):
             self.cogBattle.selectGag(Gag.THROW)
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
 
     def test_cog_dies_combo(self):
-        self.setUp1v1()
         self.cogBattle.selectGag(Gag.SQUIRT)
         self.cogBattle.selectGag(Gag.THROW)
         self.cogBattle.selectGag(Gag.SQUIRT)
+        self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
+
+    # def test_toon_joins_only_during_gag_select(self): -> Can't test this
+    # because of timing issues (gag execute and cogs attack is instant)
+
+    # def test_cog_joins_only_during_gag_select(self): -> See above
+
+    def test_triple_squirt_kills(self):
+        for _ in range(2):
+            self.cogBattle.requestToonJoin(Toon())
+            taskMgr.step()
+        for _ in range(3):
+            self.cogBattle.selectGag(Gag.SQUIRT)
+        self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
+        self.assertEqual(self.cogBattle.toons[0].health, 15)
+
+    def test_double_throw_kills(self):
+        self.cogBattle.requestToonJoin(Toon())
+        taskMgr.step()
+        for _ in range(2):
+            self.cogBattle.selectGag(Gag.THROW)
+        self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
+        self.assertEqual(self.cogBattle.toons[0].health, 15)
+
+    def test_two_cogs_attack(self):
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        for _ in range(4):
+            self.cogBattle.selectGag(Gag.PASS)
+        self.assertEqual(self.cogBattleFSM.state, CogBattleState.COGS_WON)
+
+    def test_four_cogs_attack(self):
+        for _ in range(3):
+            self.cogBattle.requestCogJoin(Cog())
+            taskMgr.step()
+        for _ in range(2):
+            self.cogBattle.selectGag(Gag.PASS)
+        self.assertEqual(self.cogBattleFSM.state, CogBattleState.COGS_WON)
+
+    def test_additional_gags_do_nothing(self):
+        for _ in range(3):
+            self.cogBattle.requestToonJoin(Toon())
+            taskMgr.step()
+            self.cogBattle.selectGag(Gag.SQUIRT)
+        self.cogBattle.selectGag(Gag.THROW)
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
 
 
