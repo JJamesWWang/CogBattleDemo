@@ -18,12 +18,14 @@ class ToonCombatant(Combatant):
     ) -> None:
         super().__init__(battle, deterministic)
         self.health = toon.laff
-        self.selectedGag = Gag.NONE
+        self.selectedGag: int = Gag.NONE
+        self.selectedTarget: Combatant = None
 
     @overrides
     def executeAttack(self) -> None:
-        target = random.choice(self.battle.cogs)
-        target.takeDamage(Gag.DAMAGE[self.selectedGag])
+        if self.battle.cogs:
+            target = random.choice(self.battle.cogs)
+            target.takeDamage(Gag.DAMAGE[self.selectedGag])
 
     @overrides
     def isAttackHit(self) -> bool:
