@@ -32,13 +32,19 @@ class CogCombatant(Combatant):
 
     @overrides
     def executeAttack(self):
-        pass
+        target = random.choice(self.battle.toons)
+        target.takeDamage(self.DAMAGE[self.selectedAttack])
 
-    def selectAttack(self) -> str:
-        pass
+    def selectAttack(self) -> None:
+        self.selectedAttack = (
+            self.ATTACKS[0]
+            if self.isDeterministic
+            else random.choice(self.ATTACKS)
+        )
 
     @overrides
     def isAttackHit(self) -> bool:
+        self.selectAttack()
         isHit = (
             True
             if self.isDeterministic
@@ -47,7 +53,3 @@ class CogCombatant(Combatant):
         )
         print(f"The cog {'hit' if isHit else 'missed'}")
         return isHit
-
-    def isCogHit(self, cogAttack):
-        self.selectedAttack = cogAttack
-        return self.isAttackHit()

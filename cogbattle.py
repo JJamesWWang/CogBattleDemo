@@ -60,39 +60,18 @@ class CogBattleFSM(FSM):
         taskMgr.remove(self.gagSelectTimer)
 
     def enterGagExecute(self) -> None:
-        self.executeGags()
+        self.battle.advanceTurn()
         if self.battle.cogs:
             self.demand(CogBattleState.COGS_ATTACK)
         else:
             self.demand(CogBattleState.TOONS_WON)
 
-    def executeGags(self) -> None:
-        cogs = self.battle.cogs
-        for gag in sorted(self.battle.selectedGags):
-            targetCog = 0
-            if not Gag.isGagHit(gag):
-                continue
-            cogs[targetCog].takeDamage(Gag.DAMAGE[gag])
-            if cogs[targetCog].isDead():
-                cogs.pop(targetCog)
-
     def enterCogsAttack(self) -> None:
-        self.executeCogAttacks()
+        self.battle.advanceTurn()
         if self.battle.toons:
             self.demand(CogBattleState.GAG_SELECT)
         else:
             self.demand(CogBattleState.COGS_WON)
-
-    def executeCogAttacks(self) -> None:
-        toons = self.battle.toons
-        for cog in self.battle.cogs:
-            attack = random.choice(CogCombatant.ATTACKS)
-            targetToon = 0
-            if not cog.isCogHit(attack):
-                continue
-            toons[targetToon].takeDamage(CogCombatant.DAMAGE[attack])
-            if toons[targetToon].isDead():
-                toons.pop(targetToon)
 
     def enterCogsWon(self) -> None:
         print("Cogs won the battle!")
@@ -115,17 +94,21 @@ class CogBattle(Battle):
     MAX_TOONS_IN_BATTLE: int = 1
     MAX_COGS_IN_BATTLE: int = 1
 
-    def __init__(self, toons: List[Toon], cogs: List[Cog]) -> None:
-        self.toons: List[ToonCombatant] = [
-            ToonCombatant(self, toon) for toon in toons
-        ]
-        self.cogs: List[CogCombatant] = [
-            CogCombatant(self, cog) for cog in cogs
-        ]
-        super().__init__([self.toons, self.cogs])
-
+    def __init__(
+        self, toons: List[Toon], cogs: List[Cog], deterministic: bool = False
+    ) -> None:
+        toons = [ToonCombatant(self, toon, deterministic) for toon in toons]
+        cogs = [CogCombatant(self, cog, deterministic) for cog in cogs]
+        super().__init__([toons, cogs])
         self.cogBattleFSM: CogBattleFSM = CogBattleFSM("CogBattleFSM", self)
-        self.selectedGags: List[int] = [Gag.PASS] * len(self.toons)
+
+    @property
+    def toons(self):
+        return self.sides[0]
+
+    @property
+    def cogs(self):
+        return self.sides[1]
 
     def startCogBattle(self) -> None:
         print("Starting Cog Battle")
@@ -135,12 +118,9 @@ class CogBattle(Battle):
         if self.cogBattleFSM.state != CogBattleState.GAG_SELECT:
             return
         print(f"Selected {gag}")
-        self.selectedGags[0] = gag
-        if all(self.selectedGags):
-            self.startGagExecute()
+        self.toons[0].selectedGag = gag
+        if all(toon.selectedGag for toon in self.toons):
+            self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE)
 
-    def startGagExecute(self) -> None:
-        self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE)
-
-    def startCogsAttack(self) -> None:
-        self.cogBattleFSM.request(CogBattleState.COGS_ATTACK)
+    def clearDeadCombatants(self) -> None:
+        super().clearDeadCombatants()

@@ -22,11 +22,16 @@ class ToonCombatant(Combatant):
 
     @overrides
     def executeAttack(self) -> None:
-        pass
+        target = random.choice(self.battle.cogs)
+        target.takeDamage(Gag.DAMAGE[self.selectedGag])
 
     @overrides
     def isAttackHit(self) -> bool:
         rand = random.random()
-        isHit = rand < 0.95 and rand < Gag.CHANCE_TO_HIT[self.selectedGag]
+        isHit = (
+            True
+            if self.isDeterministic
+            else rand < 0.95 and rand < Gag.CHANCE_TO_HIT[self.selectedGag]
+        )
         print(f"The toon {'hit' if isHit else 'missed'}")
         return isHit
