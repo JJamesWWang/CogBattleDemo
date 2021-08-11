@@ -23,9 +23,8 @@ class ToonCombatant(Combatant):
 
     @overrides
     def executeAttack(self) -> None:
-        if self.battle.cogs:
-            target = random.choice(self.battle.cogs)
-            target.takeDamage(Gag.DAMAGE[self.selectedGag])
+        if self.battle.cogs and not self.selectedTarget.isDead():
+            self.selectedTarget.takeDamage(Gag.DAMAGE[self.selectedGag])
 
     @overrides
     def isAttackHit(self) -> bool:
