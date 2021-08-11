@@ -1,3 +1,5 @@
+"""Copyright 2021, James S. Wang, All rights reserved."""
+
 from main import CogBattleDemo
 from cogbattle import CogBattle, CogBattleFSM, CogBattleState
 from toon import Toon, ToonCombatant
