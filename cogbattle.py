@@ -1,6 +1,5 @@
 """Copyright 2021, James S. Wang, All rights reserved."""
 
-from combatant import Combatant
 from cog import Cog, CogCombatant
 from direct.fsm.FSM import FSM
 from direct.task import Task
@@ -9,7 +8,7 @@ from gag import Gag
 from toon import Toon, ToonCombatant
 from typing import Dict, List
 from utils import TimePrinter
-import random
+import math
 
 
 class CogBattleState:
@@ -82,7 +81,7 @@ class CogBattleFSM(FSM):
             self.request(CogBattleState.GAG_EXECUTE)
             return Task.done
         self.timePrinter.printTime(
-            int(CogBattle.GAG_SELECT_WAIT_TIME - task.time)
+            math.ceil(CogBattle.GAG_SELECT_WAIT_TIME - task.time)
         )
         return Task.cont
 
@@ -190,10 +189,7 @@ class CogBattle:
         """
         if self.cogBattleFSM.state != CogBattleState.GAG_SELECT:
             return
-        print(
-            f"Selected {gag} for toon {self.selectedGagTurn + 1}, "
-            "select a cog next."
-        )
+        print(f"Selected {Gag.NAME[gag]} for toon {self.selectedGagTurn + 1}.")
         self.toons[self.selectedGagTurn].selectedGag = gag
         if len(self.cogs) == 1 or gag not in Gag.TARGET_REQUIRED:
             self.selectTarget(0)

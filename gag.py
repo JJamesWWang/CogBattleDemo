@@ -18,6 +18,7 @@ class Gag:
         CHANCE_TO_HIT (dict of int to float): Maps gags to chance to hit.
         EXECUTE_ORDER (list of int): A sorted list of gags indicating order.
         TARGET_REQUIRED (list of int): A list of gags that require targets.
+        NAME (dict of int to str): Maps gags to their names.
     """
 
     NONE: int = 0
@@ -28,3 +29,8 @@ class Gag:
     CHANCE_TO_HIT: Dict[int, float] = {PASS: 0.0, SQUIRT: 0.9, THROW: 0.75}
     EXECUTE_ORDER: List[int] = [SQUIRT, THROW]
     TARGET_REQUIRED: List[int] = [SQUIRT, THROW]
+    NAME: Dict[int, str] = {
+        PASS: "Pass",
+        SQUIRT: "Squirt",
+        THROW: "Throw",
+    }
