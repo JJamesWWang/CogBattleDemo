@@ -1,3 +1,4 @@
+from combatant import Combatant
 from cog import Cog, CogCombatant
 from direct.fsm.FSM import FSM
 from direct.task import Task
@@ -46,6 +47,9 @@ class CogBattleFSM(FSM):
         )
         self.timePrinter.clear()
         self.battle.selectedGagTurn = 0
+        for toon in self.battle.toons:
+            toon.selectedGag = Gag.NONE
+            toon.selectedTarget = None
 
     def gagSelectTimerTick(self, task: Task) -> int:
         if (
@@ -75,6 +79,7 @@ class CogBattleFSM(FSM):
         self.gagSelectTimer = taskMgr.add(
             self.gagSelectTimerTick, "GagSelectTimerTick"
         )
+        self.timePrinter.clear()
 
     def exitGagSelect(self) -> None:
         taskMgr.remove(self.gagSelectTimer)
@@ -134,17 +139,38 @@ class CogBattle:
     def selectGag(self, gag: int) -> None:
         if self.cogBattleFSM.state != CogBattleState.GAG_SELECT:
             return
-        print(f"Selected {gag} for toon {self.selectedGagTurn + 1}")
+        print(
+            f"Selected {gag} for toon {self.selectedGagTurn + 1}, "
+            "select a cog next."
+        )
         self.toons[self.selectedGagTurn].selectedGag = gag
+        if len(self.cogs) == 1 or gag not in Gag.TARGET_REQUIRED:
+            self.selectTarget(0)
+
+    def selectTarget(self, target: int) -> None:
+        if self.cogBattleFSM.state != CogBattleState.GAG_SELECT:
+            return
+        if target >= len(self.cogs):
+            print("Selected nonexistent cog, try again")
+            return
+
+        print(f"Selected cog {target + 1}")
+        self.toons[self.selectedGagTurn].selectedTarget = self.cogs[target]
         self.selectedGagTurn = (self.selectedGagTurn + 1) % len(self.toons)
         if all(toon.selectedGag for toon in self.toons):
             self.cogBattleFSM.request(CogBattleState.GAG_EXECUTE)
 
     def executeGags(self) -> None:
         for gag in Gag.EXECUTE_ORDER:
-            for toon in filter(lambda t: t.selectedGag == gag, self.toons):
-                toon.executeAttack()
-            self.cogs = [cog for cog in self.cogs if not cog.isDead()]
+            attackingToons = [
+                toon for toon in self.toons if toon.selectedGag == gag
+            ]
+            # Use the first toon to roll for a hit; if the first succeeds, so
+            # do the rest.
+            if attackingToons and attackingToons[0].isAttackHit():
+                for toon in attackingToons:
+                    toon.executeAttack()
+                self.cogs = [cog for cog in self.cogs if not cog.isDead()]
 
     def attackToons(self) -> None:
         for cog in self.cogs:
