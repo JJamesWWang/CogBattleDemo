@@ -1,3 +1,5 @@
+"""Copyright 2021, James S. Wang, All rights reserved."""
+
 from direct.showbase.ShowBase import ShowBase
 from direct.gui.OnscreenText import OnscreenText
 from cogbattle import CogBattle
@@ -8,9 +10,16 @@ from panda3d.core import TextNode
 import sys
 
 
-# Macro-like function used to reduce the amount to code needed to create the on
-# screen instructions
-def genText(text, i) -> OnscreenText:
+def genText(text: str, i: int) -> OnscreenText:
+    """Macro-like function used to generate on screen instructions.
+
+    Args:
+        text (str): The text to display.
+        i (int): The position to display it at (higher = lower screen position)
+
+    Returns:
+        OnscreenText: The text object that's displayed.
+    """
     return OnscreenText(
         text=text,
         parent=base.a2dTopLeft,
@@ -23,6 +32,18 @@ def genText(text, i) -> OnscreenText:
 
 
 class CogBattleDemo(ShowBase):
+    """A demonstration of a simplified cog battle using Panda3D.
+
+    In this simplified version, toons can pass or use a squirt or throw gag,
+    while cogs can use two different attacks. Toons and cogs can also join the
+    battle at any point while the battle is active. Toons first select a gag
+    and then should select a cog to target. The battle ends when either all
+    cogs are dead or are toons have been greened.
+
+    Attributes:
+        cogBattle (CogBattle): The cog battle that the demo is running.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self.cogBattle: CogBattle = CogBattle([Toon()], [Cog()])
@@ -30,6 +51,7 @@ class CogBattleDemo(ShowBase):
         self.bindInput()
 
     def generateInstructions(self):
+        """Shows all of the on-screen instructions."""
         genText("ESC: Quit", 0)
         genText("S: Start Cog Battle", 1)
         genText("T: Add Toon", 2)
@@ -43,6 +65,7 @@ class CogBattleDemo(ShowBase):
         genText("0: Target Cog 4", 10)
 
     def bindInput(self):
+        """Binds possible actions to certain keys for player interaction."""
         self.accept("escape", sys.exit)
         self.accept("s", self.cogBattle.startCogBattle)
         self.accept("t", self.cogBattle.requestToonJoin, [Toon()])
