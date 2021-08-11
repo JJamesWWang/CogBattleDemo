@@ -118,6 +118,35 @@ class TestCogBattle(unittest.TestCase):
         self.cogBattle.selectGag(Gag.THROW)
         self.assertEqual(self.cogBattleFSM.state, CogBattleState.TOONS_WON)
 
+    def test_targeting_works(self):
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        self.cogBattle.selectGag(Gag.SQUIRT)
+        self.cogBattle.selectTarget(1)
+        self.assertEqual(self.cogBattle.cogs[1].health, 8)
+
+    def test_multitargeting_works(self):
+        for _ in range(3):
+            self.cogBattle.requestToonJoin(Toon())
+            taskMgr.step()
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+        for _ in range(3):
+            self.cogBattle.selectGag(Gag.THROW)
+            self.cogBattle.selectTarget(1)
+        self.cogBattle.selectGag(Gag.THROW)
+        self.cogBattle.selectTarget(0)
+        self.assertEqual(len(self.cogBattle.cogs), 1)
+        self.assertEqual(self.cogBattle.cogs[0].health, 6)
+
+    def test_selecting_nonexistent_cog_does_nothing(self):
+        self.cogBattle.requestCogJoin(Cog())
+        taskMgr.step()
+
+        self.cogBattle.selectGag(Gag.SQUIRT)
+        self.cogBattle.selectTarget(2)
+        self.assertEqual(self.cogBattleFSM.state, CogBattleState.GAG_SELECT)
+
 
 if __name__ == "__main__":
     unittest.main()
