@@ -37,6 +37,10 @@ class CogBattleDemo(ShowBase):
         genText("1: Pass", 4)
         genText("2: Use Squirt", 5)
         genText("3: Use Throw", 6)
+        genText("7: Target Cog 1", 7)
+        genText("8: Target Cog 2", 8)
+        genText("9: Target Cog 3", 9)
+        genText("0: Target Cog 4", 10)
 
     def bindInput(self):
         self.accept("escape", sys.exit)
@@ -46,6 +50,10 @@ class CogBattleDemo(ShowBase):
         self.accept("1", self.cogBattle.selectGag, [Gag.PASS])
         self.accept("2", self.cogBattle.selectGag, [Gag.SQUIRT])
         self.accept("3", self.cogBattle.selectGag, [Gag.THROW])
+        self.accept("7", self.cogBattle.selectTarget, [0])
+        self.accept("8", self.cogBattle.selectTarget, [1])
+        self.accept("9", self.cogBattle.selectTarget, [2])
+        self.accept("0", self.cogBattle.selectTarget, [3])
 
 
 if __name__ == "__main__":
