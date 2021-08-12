@@ -2,7 +2,6 @@
 
 from combatant import Combatant
 from gag import Gag
-from typing import List
 from overrides import overrides
 import random
 

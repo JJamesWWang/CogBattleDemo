@@ -1,7 +1,6 @@
 """Copyright 2021, James S. Wang, All rights reserved."""
 
 from abc import ABC, abstractmethod
-from typing import List
 from overrides import EnforceOverrides
 
 

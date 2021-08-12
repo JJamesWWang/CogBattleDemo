@@ -1,9 +1,9 @@
 """Copyright 2021, James S. Wang, All rights reserved."""
 
 from main import CogBattleDemo
-from cogbattle import CogBattle, CogBattleFSM, CogBattleState
-from toon import Toon, ToonCombatant
-from cog import Cog, CogCombatant
+from cogbattle import CogBattle, CogBattleState
+from toon import Toon
+from cog import Cog
 from gag import Gag
 from panda3d.core import loadPrcFileData
 import unittest
