@@ -2,7 +2,8 @@
 
 This is a combination of a CLI and Panda3D to demonstrate a simplified version
 of a cog battle in Toontown: Corporate Clash. It was made specifically for my
-application at Corporate Clash.
+application at Corporate Clash. See a brief discussion of my decision-making
+[here](https://docs.google.com/document/d/1nT6WK9QgAp7n1AfU--tYC2WgN2l3kjmA7iVmj0qReGs/edit?usp=sharing)
 
 ## Setup
 
