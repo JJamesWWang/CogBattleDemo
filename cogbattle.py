@@ -158,7 +158,7 @@ class CogBattle:
         selectedGagTurn (int): The index of the toon to select a gag for.
     """
 
-    GAG_SELECT_WAIT_TIME: int = 10
+    GAG_SELECT_WAIT_TIME: int = 40
     MAX_TOONS_IN_BATTLE: int = 4
     MAX_COGS_IN_BATTLE: int = 4
 
